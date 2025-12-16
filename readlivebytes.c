@@ -10,7 +10,7 @@ typedef unsigned char u_char;
 pcap_t *handle;
 char errbuf[PCAP_ERRBUF_SIZE];
 
-// captures a single packet and returns the bytes of the captured packet as a uchar ( must be freed )
+// captures a single packet and returns the bytes of the captured packet as a uchar buff ( must be freed )
 u_char* capture_single(){
     handle = pcap_open_live("wlp3s0", 65535, 1, 1000, errbuf);
     if(handle==NULL){
@@ -30,7 +30,7 @@ u_char* capture_single(){
     return copy;
 }
 
-int readraw(){
+int read_raw_live(){
 
     //pcap_open_live(interface name (char[]), snaplen(max bytes per packet), promiscuos mode, readtimeout in milliseconds, errorbuffer)
     
@@ -64,17 +64,31 @@ int readraw(){
     return 0;
 }
 
+void printPacketBytes(const u_char *packet, size_t size){
+
+    printf("Raw bytes of packet --------------------- \n\n");
+    for(int i = 0; i < size; i++){
+        printf("%02x ", packet[i]);
+    }
+    printf("\n");
+
+}
+
+
 /*
-
 int main(){
-    const u_char* packet;
-    packet = capture_single();
-    
+    handle = pcap_open_live("wlp3s0", 65535, 1, 1000, errbuf);
+    if(handle==NULL){
+        printf("Could not open wlps30: %s \n", errbuf);
+        return 1;
+    }
 
-    
+    struct pcap_pkthdr header;
+    const u_char *packet;
 
-    free((u_char*)packet);
+    packet = pcap_next(handle, &header);
     
-    return 1;
+    printPacketBytes(packet, header.caplen);
+    return 0;
 }
 */
