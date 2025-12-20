@@ -44,7 +44,7 @@ struct INET_V4_HEADERS {
     char* d_addr;
     u_char* options;
     short options_size;
-
+    u_char* payload;
 
 };
 
@@ -189,10 +189,11 @@ struct INET_V4_HEADERS* parsePacket(const u_char* packet, int size){
     currentposition += (IP_ADDR_SIZE /8);
 
     // check if there are options. if their are then right it to a heap buffer
+    int options_size = 0;
     if(result->ihl > 5){
         int max_options_size = 40;
         u_char *options_addr = calloc(max_options_size , sizeof(unsigned char));
-        int options_size = (result->ihl - 5)*4;
+        options_size = (result->ihl - 5)*4;
 
         for(int i = 0; i < options_size; i++)
             options_addr[i] = (frame->payload)[currentposition + i];
@@ -203,6 +204,16 @@ struct INET_V4_HEADERS* parsePacket(const u_char* packet, int size){
     {
         result->options = NULL;
     }
+
+    
+    int payloadSize = size - (result->ihl * 4);
+    u_char* payloadBits = malloc(payloadSize);
+
+    currentposition += options_size;
+    for(int i = 0; i < payloadSize; i++){
+        payloadBits[i] = (frame->payload)[ (currentposition++)];
+    }
+
 
     free(frame);
     return result; 
@@ -247,12 +258,14 @@ int testPacket(){
     printf("Source addr: %s\n", testPacket->s_addr);
     printf("Destination addr: %s\n\n", testPacket->d_addr);
     printf("Options address: %p", testPacket);
-    
+
     free_INET_V4_HEADERS(testPacket);
-
-
-    
     return 0;
 
+
+}
+
+int main(void){
+    testPacket();
 
 }
