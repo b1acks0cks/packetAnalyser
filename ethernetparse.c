@@ -30,7 +30,7 @@ void free_eth(struct ethernet_header *head) {
 
 
 // parses ethernet address from a given packet into ethernet_headers struct ( must free )
-struct ethernet_header* parseMacAddress(const u_char* rawPacket, int packetLength){
+struct ethernet_header* parseFrame(const u_char* rawPacket, int packetLength){
     struct ethernet_header *result_headers =  (struct ethernet_header*) malloc(sizeof( struct ethernet_header)) ;
     u_char dest_bytes[6];
     u_char source_bytes[6];
@@ -127,62 +127,3 @@ struct ethernet_header* parseMacAddress(const u_char* rawPacket, int packetLengt
     return result_headers;
 }
 
-int main(void)
-{
-
-    // read a packet and parse the mac address to test;
-
-    pcap_t *handle;
-    char errbuff[PCAP_ERRBUF_SIZE];
-
-    handle = pcap_open_live("wlp3s0", 65535, 1, 1000, errbuff);
-
-    int successCode = pcap_datalink(handle);
-
-    if (successCode == -1)
-    {
-        printf("Could not commence link-layer-aware parsing on interface");
-        return 1;
-    }
-    if(handle == NULL){
-        printf("Error in loading interface: %s \n",errbuff);
-        return 1;
-    }
-    // filter for http traffic
-    struct bpf_program fp;
-    char filter_exp[] = "tcp port 80";
-    if (pcap_compile(handle, &fp, filter_exp, 0, PCAP_NETMASK_UNKNOWN) == -1){
-        fprintf(stderr, "Couldn't pass filter %s: %s\n", filter_exp, pcap_geterr(handle));
-        return 1;
-    }
-    if(pcap_setfilter(handle, &fp) == -1)
-        fprintf(stderr, "Couldn't install filter %s: %s \n", filter_exp, pcap_geterr(handle));
-    
-    struct pcap_pkthdr header;
-    const u_char *packet;
-
-    do{
-        int count = 1;
-        printf("Packet number %d --------------------------------------------- \n", count);
-        printf("Layer 2-------------------------------- \n");
-        packet = pcap_next(handle, &header);
-                    
-        struct ethernet_header *ether = parseMacAddress(packet, header.len);
-        printf("Packet length: %d \n", header.len);
-        printf("Destination mac address: %s\n", ether->destinationMac);
-        printf("Source mac address: %s \n", ether->sourceMac);
-        printf("Ethertype: %s\n", ether->ethertype);
-        printf("Payload: bytes: \n");
-        for(int i = 0; i < (header.len); i++)
-        {
-            printf("%02x ", packet[i + ETHERNET_MAC_AND_ETHER_SIZE]);
-        }
-        free_eth(ether);
-        printf("\n\n");
-        count++;
-
-    }while(1);
-
-    return 0; 
-
-}
