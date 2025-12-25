@@ -1,4 +1,8 @@
 #include<stdint.h>
+#include "protocols.h"
+#include<string.h>
+#include<stdlib.h>
+
 
 static const char *protocol_codes[256] = {
     [0]   = "HOPOPT",
@@ -90,6 +94,7 @@ static const char *protocol_codes[256] = {
     [86]  = "DGP",
     [87]  = "TCF",
     [88]  = "EIGRP",
+    [102] = "PNNI",
     [89]  = "OSPF",
     [90]  = "Sprite-RPC",
     [91]  = "LARP",
@@ -103,7 +108,6 @@ static const char *protocol_codes[256] = {
     [99]  = "Any private encryption scheme",
     [100] = "GMTP",
     [101] = "IFMP",
-    [102] = "PNNI",
     [103] = "PIM",
     [104] = "ARIS",
     [105] = "SCPS",

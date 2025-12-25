@@ -1,4 +1,6 @@
 #include<stdio.h>
+#include "dscpcodes.h"
+
 
 const char* get_dscp_class(int dscp_code)
 {

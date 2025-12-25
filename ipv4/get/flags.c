@@ -1,6 +1,8 @@
 #include<stdlib.h>
 #include<string.h>
 #include<stdio.h>
+#include<stdint.h>
+#include "flags.h"
 
 // takes the raw BITS of a flag as an integer and returns an that gives more information about the flags
 unsigned char test[3] = {0,1,0};

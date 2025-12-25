@@ -1,12 +1,14 @@
 #include<stdio.h>
 #include "ethernetparse.c"
 
-#include "ipv4/dscpcodes.c"
-#include "ipv4/flags.c"
-#include "ipv4/versions.c"
-#include "ipv4/ecn.c"
-#include "ipv4/protocols.c"
-
+#include "ipv4/ipv4.h"
+/*
+#include "ipv4/get/dscpcodes.h"
+#include "ipv4/get/flags.h"
+#include "ipv4/get/versions.h"
+#include "ipv4/get/ecn.h"
+#include "ipv4/get/protocols.h"
+*/
 #include<arpa/inet.h>
 #include<pcap.h>
 
@@ -31,10 +33,10 @@
 struct INET_V4_HEADERS {
     char* version;
     u_int8_t ihl;
-    char* dscp; // use get_dscp class to get class
+    char* dscp; 
     char* ecn;
     u_int16_t packetLength; 
-    char **flags; // use get_flags find the flag information
+    char **flags; 
     u_int16_t identification;
     uint16_t fragmentOffset;
     uint8_t ttl;
@@ -244,7 +246,7 @@ int testPacket(){
 
     packet = pcap_next(interface, &header);
     struct INET_V4_HEADERS *testPacket = parsePacket(packet, header.caplen);
-
+    for(int i = 0; i < 100; i++){
     printf("Version: %s \n", testPacket->version);
     printf("IHL: %d \n", testPacket->ihl);
     printf("DSCP: %s \n", testPacket->dscp);
@@ -258,14 +260,10 @@ int testPacket(){
     printf("Source addr: %s\n", testPacket->s_addr);
     printf("Destination addr: %s\n\n", testPacket->d_addr);
     printf("Options address: %p", testPacket);
-
+    }
     free_INET_V4_HEADERS(testPacket);
     return 0;
 
 
 }
 
-int main(void){
-    testPacket();
-
-}
