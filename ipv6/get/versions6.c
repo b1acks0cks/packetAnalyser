@@ -1,7 +1,7 @@
 #include<stdint.h>
 #include "versions6.h"
 #include<stdint.h>
-
+#include<stdio.h>
 
 
 const char *ipv_versions[16] = {
@@ -25,12 +25,10 @@ const char *ipv_versions[16] = {
 
 
 const char* get_ip6_version(uint8_t code){
-    
     if(code < 16)
         return ipv_versions[code];
     else
         return "Unsopported IP version";
-
 }
 
 
