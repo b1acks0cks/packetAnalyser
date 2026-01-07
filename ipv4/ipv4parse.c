@@ -1,20 +1,15 @@
 #include<stdio.h>
-#include "ethernetparse.c"
+#include "ethernetparse.h"
 
-#include "ipv4/ipv4.h"
-/*
-#include "ipv4/get/dscpcodes.h"
-#include "ipv4/get/flags.h"
-#include "ipv4/get/versions.h"
-#include "ipv4/get/ecn.h"
-#include "ipv4/get/protocols.h"
-*/
+#include "ipv4.h"
+#include "ipv4parse.h"
 #include<arpa/inet.h>
 #include<pcap.h>
 
 #include<stdlib.h>
+#include<string.h>
 
-
+typedef unsigned char u_char;
 // in bits
 #define VERSION_SIZE 4
 #define IHL_SIZE 4
@@ -30,25 +25,7 @@
 
 #define SIZEOFBYTE 8
 
-struct INET_V4_HEADERS {
-    char* version;
-    u_int8_t ihl;
-    char* dscp; 
-    char* ecn;
-    u_int16_t packetLength; 
-    char **flags; 
-    u_int16_t identification;
-    uint16_t fragmentOffset;
-    uint8_t ttl;
-    char* protocol;
-    u_int16_t checksum;
-    char* s_addr;
-    char* d_addr;
-    u_char* options;
-    short options_size;
-    u_char* payload;
 
-};
 
 void free_INET_V4_HEADERS(struct INET_V4_HEADERS *packet) {
     free(packet->version);
@@ -215,6 +192,7 @@ struct INET_V4_HEADERS* parsePacket(const u_char* packet, int size){
     for(int i = 0; i < payloadSize; i++){
         payloadBits[i] = (frame->payload)[ (currentposition++)];
     }
+    result->payload=payloadBits;
 
 
     free(frame);
@@ -233,7 +211,7 @@ int testPacket(){
 
     // add filter
     struct bpf_program fp;
-    char filter_exp[] = "";
+    char filter_exp[] = "ip4";
     bpf_u_int32 net = 0;
 
     pcap_compile(interface, &fp, filter_exp, 0, net);
@@ -259,7 +237,7 @@ int testPacket(){
     printf("Protocol: %s\n", testPacket->protocol);
     printf("Source addr: %s\n", testPacket->s_addr);
     printf("Destination addr: %s\n\n", testPacket->d_addr);
-    printf("Options address: %p", testPacket);
+    printf("Options address: %p \n\n", testPacket);
     }
     free_INET_V4_HEADERS(testPacket);
     return 0;

@@ -2,7 +2,7 @@
 #include "dscp.h"
 
 
-const char* get_dscp_class(int dscp_code)
+const char* get_dscp_v6_class(int dscp_code)
 {
     switch(dscp_code)
     {

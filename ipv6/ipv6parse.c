@@ -1,12 +1,14 @@
-#include "ethernetparse.c"
+#include "ethernetparse.h"
 #include<stdlib.h>
 #include<stdint.h>
 #include<pcap.h>
 
 #include<arpa/inet.h>
+#include<string.h>
 
-#include "ipv6/ipv6.h"
+#include "ipv6.h"
 
+typedef unsigned char u_char;
 #define OCTET_SIZE 1
 
 struct INET_V6_HEADERS {
@@ -57,14 +59,14 @@ struct INET_V6_HEADERS *parsev6Packet(const u_char* packet, int size){
 
     int max_dscp_size = 40;
     result->diff_services = malloc(max_dscp_size);
-    strncpy(result->diff_services, get_dscp_class(diff_services_bytes), max_dscp_size);
+    strncpy(result->diff_services, get_dscp_v6_class(diff_services_bytes), max_dscp_size);
 
 
     int max_ecn_size = 40;
     uint8_t ecn_code = (traffic_class_bytse & 0x30) >> 4;
 
     result->ecn = malloc(max_ecn_size);
-    strncpy(result->ecn, get_ecn(ecn_code) ,max_dscp_size);
+    strncpy(result->ecn, get_ecn_v6(ecn_code) ,max_dscp_size);
 
     int flow_label_bytes = (nextByte & 0xF << 16) | ( (frame->payload)[2] << 8) | ( (frame->payload)[3] );
 
@@ -83,7 +85,7 @@ struct INET_V6_HEADERS *parsev6Packet(const u_char* packet, int size){
     int next_header_position = 6;
     uint8_t next_header_bits = (frame->payload)[next_header_position];
     result->next_header = malloc(max_next_header_size);
-    strncpy(result->next_header, get_protocol_name(next_header_bits), max_next_header_size);
+    strncpy(result->next_header, get_protocol_v6_name(next_header_bits), max_next_header_size);
 
     result->hop_limit = (u_char)(frame->payload)[7];
 
@@ -128,12 +130,12 @@ struct INET_V6_HEADERS *parsev6Packet(const u_char* packet, int size){
     return result;
 }
 
-int main(){
+int testv6Packet(){
     char errbuff[PCAP_ERRBUF_SIZE];
     pcap_t *interface = pcap_open_live("wlp3s0", 65535, 1, 1000, errbuff);
 
     if (interface == NULL){
-        printf("Error opening interface: %s\n Terminating Program\n", errbuf);
+        printf("Error opening interface: %s\n Terminating Program\n", errbuff);
         return 1;
     }
 
@@ -149,9 +151,7 @@ int main(){
 
     pcap_setfilter(interface, &fp);
 
-
-    while(1){
-        packet = pcap_next(interface, &header);
+    packet = pcap_next(interface, &header);
 
         struct INET_V6_HEADERS *test = parsev6Packet(packet, header.caplen);
         //test here
@@ -163,7 +163,7 @@ int main(){
         printf("Next header: %s\n", test->next_header);
         printf("Hop limit: %d\n", test->hop_limit);
         printf("Source address: %s\n", test->s_6_addr);
-        printf("Destination address: %s\n\n", test->d_6_addr);
+        printf("Destination address: %s\n", test->d_6_addr);
         
         //print payload
         printf("Payload: \n");
@@ -172,8 +172,7 @@ int main(){
                 printf("\n");
             printf("%02x ", test->payload[i]);
         }
+        printf("\n");
 
         free(test);
         }
-        return 0;
-    }

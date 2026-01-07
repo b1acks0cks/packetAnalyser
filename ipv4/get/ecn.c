@@ -1,8 +1,6 @@
 #include<stdint.h>
 #include "ecn.h"
 
-
-
 char* get_ecn(uint8_t ecnCode){
     switch(ecnCode){
         case 0x0: return "Not-ECT";

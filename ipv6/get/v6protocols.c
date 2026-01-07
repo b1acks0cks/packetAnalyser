@@ -159,7 +159,7 @@ static const char *protocol_codes[256] = {
 
 };
 
-char *get_protocol_name(uint8_t protocolCode)
+char *get_protocol_v6_name(uint8_t protocolCode)
 {
     int max_protocol_name_size = 30;
     char* name = malloc(max_protocol_name_size);
