@@ -74,6 +74,7 @@ struct UDP_HEADERS *parseDatagram(const u_char* inputpacket, int size){
     }
     else if ( !strcmp("Internet Protocol Version 6 (IPv6)", frame->ethertype)){
         struct INET_V6_HEADERS* packet = parsev6Packet(inputpacket, size);
+        printf("IPv6 is unsupported");
     }
     else {
         printf("Unsupported network layer protocol");

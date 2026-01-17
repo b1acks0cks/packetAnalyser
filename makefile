@@ -3,7 +3,7 @@
 CC = gcc
 
 #compiler flags
-CFLAGS = -Iipv6 -Iipv4 -Iethernet
+CFLAGS = -Iipv6 -Iipv4 -Iethernet -Inetworklayer
 
 #Libraries
 LIBS = -lpcap
