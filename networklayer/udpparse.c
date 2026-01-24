@@ -69,12 +69,52 @@ struct UDP_HEADERS *parseDatagram(const u_char* inputpacket, int size){
             result->payload = malloc(result->length);
             for(int i = 0; i < result->length; i++){
                 *(result->payload + i) = *(network_packet->payload + i); // I used pointer arithmetic because I can
-        }
+            }
     }
     }
     else if ( !strcmp("Internet Protocol Version 6 (IPv6)", frame->ethertype)){
-        struct INET_V6_HEADERS* packet = parsev6Packet(inputpacket, size);
-        printf("IPv6 is unsupported");
+        struct INET_V6_HEADERS* network_packet = parsev6Packet(inputpacket, size);
+            if(!network_packet->payload)
+                perror("No packet");
+            int payload_size_b = (network_packet->payload_length);
+            int currentposition = 0;
+
+            u_char currentByte;
+            u_char nextByte;
+            
+            currentByte = (network_packet->payload)[currentposition];
+            nextByte = (network_packet->payload)[currentposition + 1];
+
+            uint16_t source_bits = (currentByte << BYTE_SIZE) | (nextByte);
+            result->source_port = source_bits;
+
+            currentposition += PORT_SIZE;
+
+            currentByte = (network_packet->payload)[currentposition];
+            nextByte = (network_packet->payload)[currentposition + 1];
+
+            uint16_t destination_bits = (currentByte << BYTE_SIZE) | (nextByte);
+            result->dest_port = destination_bits;
+            
+            currentposition += PORT_SIZE;
+            currentByte = (network_packet->payload)[currentposition];
+            nextByte = (network_packet->payload)[currentposition + 1];
+
+            uint16_t length_bits = ( (currentByte << BYTE_SIZE) | nextByte);
+            result->length = length_bits;
+
+            currentposition += PORT_SIZE;
+            currentByte = (network_packet->payload)[currentposition];
+            nextByte = (network_packet->payload)[currentposition + 1];
+
+            uint16_t checksum_bits = (currentByte << BYTE_SIZE) | nextByte;
+            result->checksum = checksum_bits;   
+
+            currentposition += PORT_SIZE;
+
+            result->payload = malloc(result->length);
+            for(int i = 0; i < result->length; i++)
+                *(result->payload + i) = *(network_packet->payload + i); // I used pointer arithmetic because I can
     }
     else {
         printf("Unsupported network layer protocol");
@@ -106,16 +146,17 @@ void testDatagram(){
 
     // add filter
     struct bpf_program fp;
-    char filter_exp[] = "udp";
+    char filter_exp[] = "udp and ip6";
     bpf_u_int32 net = 0;
 
     pcap_compile(interface, &fp, filter_exp, 0, net);
 
     pcap_setfilter(interface, &fp);
-
-    packet = pcap_next(interface, &header);
-
     while(1){
+
+        packet = pcap_next(interface, &header);
+
+    
         struct UDP_HEADERS *datagram = parseDatagram(packet, header.caplen);
         printf("Source port: %d\n", datagram->source_port);
         printf("Destination port: %d\n", datagram->dest_port);

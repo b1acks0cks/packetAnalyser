@@ -10,8 +10,8 @@
 
 
 int main(){
-    testSegment();
-    //testDatagram();
+    //testSegment();
+    testDatagram();
 
 
     return 0;
