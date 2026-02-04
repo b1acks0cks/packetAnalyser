@@ -12,7 +12,7 @@ LIBS = -lpcap
 SRC = main.c $(wildcard ipv4/get/*.c) $(wildcard ipv6/get/*.c) $(wildcard ipv6/*.c) $(wildcard ethernet/*.c) $(wildcard networklayer/*.c) $(wildcard ipv4/*.c)
 
 #Output binary
-BIN = main
+BIN = netdragon
 
 #BUILD 
 
