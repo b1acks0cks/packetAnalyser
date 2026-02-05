@@ -11,8 +11,8 @@ pcap_t *handle;
 char errbuf[PCAP_ERRBUF_SIZE];
 
 // captures a single packet and returns the bytes of the captured packet as a uchar buff ( must be freed )
-u_char* capture_single(){
-    handle = pcap_open_live("wlp3s0", 65535, 1, 1000, errbuf);
+u_char* capture_single(char* interface_name){
+    handle = pcap_open_live(interface_name, 65535, 1, 1000, errbuf);
     if(handle==NULL){
         printf("Could not open wlps30: %s \n", errbuf);
         perror("Terminating program \n");
@@ -30,14 +30,14 @@ u_char* capture_single(){
     return copy;
 }
 
-int read_raw_live(){
+int read_raw_live(char* interface_name){
 
     //pcap_open_live(interface name (char[]), snaplen(max bytes per packet), promiscuos mode, readtimeout in milliseconds, errorbuffer)
     
 
-    handle = pcap_open_live("wlp3s0", 65535, 1, 1000, errbuf);
+    handle = pcap_open_live(interface_name, 65535, 1, 1000, errbuf);
     if(handle==NULL){
-        printf("Could not open wlps30: %s \n", errbuf);
+        printf("Could not open interface %s: %s \n", interface_name, errbuf);
         return 1;
     }
 
@@ -53,6 +53,8 @@ int read_raw_live(){
         printf("Raw bytes: \n");
         for(int i = 0; i < header.len; i++)
         {
+            if(i % 8 == 0)
+                printf("\n");
             printf("%02x ", packet[i]);
         }
         printf("\n\n");

@@ -4,7 +4,7 @@
 #include "networklayer/udpparse.h"
 #include "networklayer/tcpparse.h"
 #include "networklayer/getflags.h"
-
+#include "raw/readlivebytes.h"
 
 #include <stdio.h>
 #include<stdlib.h>
@@ -22,7 +22,8 @@ int main(int argc, char*argv[] ){
 
     pcap_findalldevs(devices, errbuf);
 
-    char* interface_name = "any";
+    int interface_name_size = 50;
+    char interface_name[interface_name_size];
     char bpf_filter[] = "";
 
     if (devices == NULL){
@@ -30,36 +31,52 @@ int main(int argc, char*argv[] ){
         return(2);
     }
     
+    // find interface flags first
     for(int i = 0; i < argc; i++){
         char* currentflag = argv[i];
         // lists all interfaces
         if(!strcmp(currentflag, "--list-interfaces")){
             for(pcap_if_t *device=*devices ; device!=NULL ;device = device->next){
                 printf("Interface: %s\n", device->name);
+                return 0;
+            }
+        }
+        // modify interface name for captures below
+        if(!strcmp(currentflag, "-i")){
+            printf("Interface given: ");
+            strncpy(interface_name, argv[i+1], interface_name_size);
+            if (argc <= 2){
+                printf("No interface was given. Please provide one \n");
+                return 1;
+            }
+            else{
+                printf("Interface given: ");
+                printf("%s\n", interface_name);
             }
         }
     }
-
+    free(devices); // we don't need list of every type of interface so we can exit now
+    
+    // open the specified interface
     char errbuff[PCAP_ERRBUF_SIZE];
     pcap_t *interface = pcap_open_live(interface_name, 65535, 1, 1000, errbuff);
-
     if (interface == NULL){
         printf("Error opening interface: %s\n Terminating Program\n", errbuff);
         exit(1);
     }
+    for(int i = 0; i < argc; i++){
+    char* currentflag = argv[i];
 
-    const u_char *packet;
-    struct pcap_pkthdr header;
+    printf("Currentflag: %s", currentflag);
+    if(!strcmp(currentflag, "raw")){
+        printf("Starting capture of raw bytes\n");
+        for(int i = 0; i < 50; i++)
+            printf("*");
+        }
+        printf("\n\n");
+        read_raw_live(interface_name);
+    }   
 
-    // add filter
-    struct bpf_program fp;
-    char filter_exp[] = "";
-    bpf_u_int32 net = 0;
 
-    pcap_compile(interface, &fp, filter_exp, 0, net);
-    
-    
-
-    free(devices);
     return 0;
 }

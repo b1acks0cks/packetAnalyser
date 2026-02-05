@@ -9,7 +9,7 @@ CFLAGS = -Iipv6 -Iipv4 -Iethernet -Inetworklayer
 LIBS = -lpcap
 
 #Source files
-SRC = main.c $(wildcard ipv4/get/*.c) $(wildcard ipv6/get/*.c) $(wildcard ipv6/*.c) $(wildcard ethernet/*.c) $(wildcard networklayer/*.c) $(wildcard ipv4/*.c)
+SRC = main.c $(wildcard ipv4/get/*.c) $(wildcard ipv6/get/*.c) $(wildcard ipv6/*.c) $(wildcard ethernet/*.c) $(wildcard networklayer/*.c) $(wildcard ipv4/*.c) $(wildcard raw/*.c)
 
 #Output binary
 BIN = netdragon
