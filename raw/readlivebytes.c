@@ -14,7 +14,7 @@ char errbuf[PCAP_ERRBUF_SIZE];
 u_char* capture_single(char* interface_name){
     handle = pcap_open_live(interface_name, 65535, 1, 1000, errbuf);
     if(handle==NULL){
-        printf("Could not open wlps30: %s \n", errbuf);
+        printf("Could not open %s: %s \n",interface_name, errbuf);
         perror("Terminating program \n");
     }
 

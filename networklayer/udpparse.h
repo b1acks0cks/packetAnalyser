@@ -12,5 +12,6 @@ struct UDP_HEADERS {
 };
 
 void testDatagram();
+struct UDP_HEADERS *parseDatagram(const u_char* inputpacket, int size);
 
 #endif
