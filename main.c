@@ -13,17 +13,19 @@
 
 // continue find a way to implemen interfaces
 void printflag();
+void printminiflag();
 
 int main(int argc, char*argv[] ){
     
+    int interface_name_size = 50;
+    char interface_name[interface_name_size];
+
     char* dev, errbuf[PCAP_ERRBUF_SIZE];
 
     pcap_if_t **devices = malloc(sizeof(pcap_if_t));
 
     pcap_findalldevs(devices, errbuf);
 
-    int interface_name_size = 50;
-    char interface_name[interface_name_size];
     char bpf_filter[] = "";
 
     if (devices == NULL){
@@ -43,16 +45,16 @@ int main(int argc, char*argv[] ){
         }
         // modify interface name for captures below
         if(!strcmp(currentflag, "-i")){
-            printf("Interface given: ");
-            strncpy(interface_name, argv[i+1], interface_name_size);
             if (argc <= 2){
                 printf("No interface was given. Please provide one \n");
                 return 1;
             }
-            else{
+            else
+            {
                 printf("Interface given: ");
+                strncpy(interface_name, argv[i+1], interface_name_size);
                 printf("%s\n", interface_name);
-            }
+            }    
         }
     }
     free(devices); // we don't need list of every type of interface so we can exit now
@@ -76,6 +78,7 @@ int main(int argc, char*argv[] ){
         printf("\n\n");
         read_raw_live(interface_name);
         }
+    
     if(!strcmp(currentflag, "complete")){
         printf("Starting fully parsed scan\n");
         printflag();
@@ -87,16 +90,22 @@ int main(int argc, char*argv[] ){
 
 
             struct ethernet_header *frame = parseFrame(packet_bytes, header.caplen);
-            printf("Frame %s: \n", frame->ethertype);
+            printf("Frame %s > %s \n", frame->sourceMac, frame->sourceMac);
+            printminiflag();
             char transportlayertype[50];
             if( !strcmp(frame->ethertype, "Internet Protocol version 4 (IPv4)") ){
+                
+                printf("Network layer: Internet Protocol version 4 (IPv4)");
                 struct INET_V4_HEADERS *packet = parsePacket(packet_bytes, header.caplen);
                 strncpy(transportlayertype, packet->protocol, 50);
+                free_INET_V4_HEADERS(packet);
 
             }
             else if (!strcmp(frame->ethertype, "Internet Protocol Version 6 (IPv6)")){
+                printf("Network layer: Internet Protocol version 4 (IPv6)");
                 struct INET_V6_HEADERS *packet = parsev6Packet(packet_bytes, header.caplen);
-                strncpy(transportlayertype, packet->next_header, 50); // yes I know it's a magic number but to be frank I don't care.
+                strncpy(transportlayertype, packet->next_header, 50);
+                free_INET_V6_HEADERS(packet); // yes I know it's a magic number but to be frank I don't care.
             }
             else{
                 printf("Network layer protocol unsupported");
@@ -105,19 +114,21 @@ int main(int argc, char*argv[] ){
 
             if(!strcmp(transportlayertype, "TCP")){
                 struct TCP_HEADERS *transport = parseSegment(packet_bytes, header.caplen);
+                printf("We are in TCP!! \n");
             }
             else if (!strcmp(transportlayertype, "UDP")){
                 struct UDP_HEADERS *transport = parseDatagram(packet_bytes, header.caplen);
+                printf("We are in UDP \n");
                 }
             else {
                 printf("Transport layer protocol unsupported");
+              
                 continue;
             }
             
         }
         }
-        printf("We are here!!!");
-        return 1;
+
     }
         
     }   
@@ -127,4 +138,10 @@ void printflag() {
     for(int i = 0; i < 50; i++){
         printf("*");
     }
+}
+void printminiflag() {
+    for(int i = 0; i < 10; i++){
+        printf("*");
+    }
+    printf("\n");
 }
