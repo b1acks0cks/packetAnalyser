@@ -90,19 +90,19 @@ int main(int argc, char*argv[] ){
 
 
             struct ethernet_header *frame = parseFrame(packet_bytes, header.caplen);
-            printf("Frame %s > %s \n", frame->sourceMac, frame->sourceMac);
             printminiflag();
+            printf("Frame %s > %s \n", frame->sourceMac, frame->sourceMac);
             char transportlayertype[50];
             if( !strcmp(frame->ethertype, "Internet Protocol version 4 (IPv4)") ){
                 
-                printf("Network layer: Internet Protocol version 4 (IPv4)");
+                printf("Network layer: Internet Protocol version 4 (IPv4)\n");
                 struct INET_V4_HEADERS *packet = parsePacket(packet_bytes, header.caplen);
                 strncpy(transportlayertype, packet->protocol, 50);
                 free_INET_V4_HEADERS(packet);
 
             }
             else if (!strcmp(frame->ethertype, "Internet Protocol Version 6 (IPv6)")){
-                printf("Network layer: Internet Protocol version 4 (IPv6)");
+                printf("Network layer: Internet Protocol version 6 (IPv6)\n");
                 struct INET_V6_HEADERS *packet = parsev6Packet(packet_bytes, header.caplen);
                 strncpy(transportlayertype, packet->next_header, 50);
                 free_INET_V6_HEADERS(packet); // yes I know it's a magic number but to be frank I don't care.
@@ -114,18 +114,16 @@ int main(int argc, char*argv[] ){
 
             if(!strcmp(transportlayertype, "TCP")){
                 struct TCP_HEADERS *transport = parseSegment(packet_bytes, header.caplen);
-                printf("We are in TCP!! \n");
+                printf("Transport layer: %d > %d\n Checksum: %02x", transport->source_port, transport->dest_port, transport->checksum);
             }
             else if (!strcmp(transportlayertype, "UDP")){
                 struct UDP_HEADERS *transport = parseDatagram(packet_bytes, header.caplen);
-                printf("We are in UDP \n");
+                printf("Transport layer: %d > %d (UDP) \n", transport->source_port, transport->dest_port);
                 }
             else {
-                printf("Transport layer protocol unsupported");
-              
+                printf("Transport layer protocol unsupported \n");
                 continue;
             }
-            
         }
         }
 
