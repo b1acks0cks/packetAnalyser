@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<stdbool.h>
 
 
 // continue find a way to implemen interfaces
@@ -16,9 +17,11 @@ void printflag();
 void printminiflag();
 
 int main(int argc, char*argv[] ){
-    
     int interface_name_size = 50;
+    int user_specified_filter_size = 100;
     char interface_name[interface_name_size];
+    char user_specified_filter[user_specified_filter_size];
+    bool filter_set = false;
 
     char* dev, errbuf[PCAP_ERRBUF_SIZE];
 
@@ -33,7 +36,7 @@ int main(int argc, char*argv[] ){
         return(2);
     }
     
-    // find interface flags first
+    // find interface and filter flags first
     for(int i = 0; i < argc; i++){
         char* currentflag = argv[i];
         // lists all interfaces
@@ -43,7 +46,12 @@ int main(int argc, char*argv[] ){
             }
 	   return 1;
         }
-        // modify interface name for captures below
+        // modify interface name and filters for captures below
+        if(!strcmp(currentflag, "-filter")){
+            printf("Setting filter: %s", argv[i+1]);
+            strncpy(user_specified_filter, argv[i+1], user_specified_filter_size);   
+            filter_set = true;
+        }
         if(!strcmp(currentflag, "-i")){
             if (argc <= 2){
                 printf("No interface was given. Please provide one \n");
@@ -59,18 +67,36 @@ int main(int argc, char*argv[] ){
     }
     free(devices); // we don't need list of every type of interface so we can exit now
     
-    // open the specified interface
+    // open the specified interface and load filter
     char errbuff[PCAP_ERRBUF_SIZE];
     pcap_t *interface = pcap_open_live(interface_name, 65535, 1, 1000, errbuff);
-    const u_char* packet_bytes;
-
     if (interface == NULL){
         printf("Error opening interface: %s\n Terminating Program\n", errbuff);
         exit(1);
     }
+    struct bpf_program fp;
+    bpf_u_int32 net = 0;
+    
+    if(filter_set){
+        char filter_exp[user_specified_filter_size];
+        strncpy(filter_exp, user_specified_filter, user_specified_filter_size);
+
+        pcap_compile(interface, &fp, filter_exp, 0, net);
+
+        int filter_successful = pcap_setfilter(interface, &fp);
+
+        if (filter_successful){
+            printf("Could not set specified filter: %s\n Terminating Progam\n", user_specified_filter);
+            exit(1);
+        }
+    }
+    
+    const u_char* packet_bytes;
+   
     for(int i = 0; i < argc; i++){
     char* currentflag = argv[i];
 
+    
     if(!strcmp(currentflag, "raw")){
         printf("Starting capture of raw bytes\n");
         printflag();
@@ -91,15 +117,17 @@ int main(int argc, char*argv[] ){
 
             struct ethernet_header *frame = parseFrame(packet_bytes, header.caplen);
             printminiflag();
-            printf("Frame %s > %s \n", frame->sourceMac, frame->sourceMac);
+            printf("Frame %s > %s \nEthertype: %s\n", frame->sourceMac, frame->destinationMac, frame->ethertype);
+            
+            
             char transportlayertype[50];
-            if( !strcmp(frame->ethertype, "Internet Protocol version 4 (IPv4)") ){
+            if(!strcmp(frame->ethertype,"Internet Protocol version 4 (IPv4)")){
                 
-                printf("Network layer: Internet Protocol version 4 (IPv4)\n");
+            
                 struct INET_V4_HEADERS *packet = parsePacket(packet_bytes, header.caplen);
+                printf("Network layer: %s > %s\n", packet->s_addr, packet->d_addr);
                 strncpy(transportlayertype, packet->protocol, 50);
                 free_INET_V4_HEADERS(packet);
-
             }
             else if (!strcmp(frame->ethertype, "Internet Protocol Version 6 (IPv6)")){
                 printf("Network layer: Internet Protocol version 6 (IPv6)\n");
@@ -115,6 +143,7 @@ int main(int argc, char*argv[] ){
             if(!strcmp(transportlayertype, "TCP")){
                 struct TCP_HEADERS *transport = parseSegment(packet_bytes, header.caplen);
                 printf("Transport layer: %d > %d\n Checksum: %02x", transport->source_port, transport->dest_port, transport->checksum);
+                
             }
             else if (!strcmp(transportlayertype, "UDP")){
                 struct UDP_HEADERS *transport = parseDatagram(packet_bytes, header.caplen);
