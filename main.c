@@ -5,6 +5,7 @@
 #include "networklayer/tcpparse.h"
 #include "networklayer/getflags.h"
 #include "raw/readlivebytes.h"
+#include "linuxcookedcaptures/linuxcookedparse.h"
 
 #include <stdio.h>
 #include<stdlib.h>
@@ -122,8 +123,6 @@ int main(int argc, char*argv[] ){
             
             char transportlayertype[50];
             if(!strcmp(frame->ethertype,"Internet Protocol version 4 (IPv4)")){
-                
-            
                 struct INET_V4_HEADERS *packet = parsePacket(packet_bytes, header.caplen);
                 printf("Network layer: %s > %s\n", packet->s_addr, packet->d_addr);
                 strncpy(transportlayertype, packet->protocol, 50);

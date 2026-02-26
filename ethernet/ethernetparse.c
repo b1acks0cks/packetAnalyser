@@ -91,8 +91,8 @@ struct ethernet_header* parseFrame(const u_char* rawPacket, int packetLength){
 
     int offset = 0;
     if(tpid_string == "0x8100"){
-        result_headers ->eightq_tci = 1;
-        int offset = 4; 
+        result_headers->eightq_tci = malloc(sizeof(char));
+        *(result_headers->eightq_tci) = 1;
     }
     else
         result_headers->eightq_tci= NULL;

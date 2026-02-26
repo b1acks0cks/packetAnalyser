@@ -3,13 +3,13 @@
 CC = gcc
 
 #compiler flags
-CFLAGS = -Iipv6 -Iipv4 -Iethernet -Inetworklayer -Iraw
+CFLAGS = -Iipv6 -Iipv4 -Iethernet -Inetworklayer -Iraw -Ilinuxcookedcaptures
 
 #Libraries
 LIBS = -lpcap
 
 #Source files
-SRC = main.c $(wildcard ipv4/get/*.c) $(wildcard ipv6/get/*.c) $(wildcard ipv6/*.c) $(wildcard ethernet/*.c) $(wildcard networklayer/*.c) $(wildcard ipv4/*.c) $(wildcard raw/*.c)
+SRC = main.c $(wildcard ipv4/get/*.c) $(wildcard ipv6/get/*.c) $(wildcard ipv6/*.c) $(wildcard ethernet/*.c) $(wildcard networklayer/*.c) $(wildcard ipv4/*.c) $(wildcard raw/*.c) $(wildcard linuxcookedcaptures/*.c)
 
 #Output binary
 BIN = netdragon
