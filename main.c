@@ -91,72 +91,105 @@ int main(int argc, char*argv[] ){
             exit(1);
         }
     }
-    
-    const u_char* packet_bytes;
-   
-    for(int i = 0; i < argc; i++){
-    char* currentflag = argv[i];
 
-    
-    if(!strcmp(currentflag, "raw")){
-        printf("Starting capture of raw bytes\n");
-        printflag();
-        
-        printf("\n\n");
-        read_raw_live(interface_name);
-        }
-    
-    if(!strcmp(currentflag, "complete")){
-        printf("Starting fully parsed scan\n");
-        printflag();
-        printf("\n");
+    switch(pcap_datalink(interface)) // determine what interfaces we're working on 
+    {   
         struct pcap_pkthdr header;
-        // find a way to handle keyboard interrupts here
-        while(1){
-            packet_bytes = pcap_next(interface, &header);
+        case DLT_EN10MB:
+            // do the normal stuff here
+        printf("Normal ethernet\n");
+        const u_char* packet_bytes;
+   
+        for(int i = 0; i < argc; i++){
+        char* currentflag = argv[i];
 
-
-            struct ethernet_header *frame = parseFrame(packet_bytes, header.caplen);
-            printminiflag();
-            printf("Frame %s > %s \nEthertype: %s\n", frame->sourceMac, frame->destinationMac, frame->ethertype);
-            
-            
-            char transportlayertype[50];
-            if(!strcmp(frame->ethertype,"Internet Protocol version 4 (IPv4)")){
-                struct INET_V4_HEADERS *packet = parsePacket(packet_bytes, header.caplen);
-                printf("Network layer: %s > %s\n", packet->s_addr, packet->d_addr);
-                strncpy(transportlayertype, packet->protocol, 50);
-                free_INET_V4_HEADERS(packet);
-            }
-            else if (!strcmp(frame->ethertype, "Internet Protocol Version 6 (IPv6)")){
-                printf("Network layer: Internet Protocol version 6 (IPv6)\n");
-                struct INET_V6_HEADERS *packet = parsev6Packet(packet_bytes, header.caplen);
-                strncpy(transportlayertype, packet->next_header, 50);
-                free_INET_V6_HEADERS(packet); // yes I know it's a magic number but to be frank I don't care.
-            }
-            else{
-                printf("Network layer protocol unsupported");
-                continue;
-            }
-
-            if(!strcmp(transportlayertype, "TCP")){
-                struct TCP_HEADERS *transport = parseSegment(packet_bytes, header.caplen);
-                printf("Transport layer: %d > %d\n Checksum: %02x", transport->source_port, transport->dest_port, transport->checksum);
-                
-            }
-            else if (!strcmp(transportlayertype, "UDP")){
-                struct UDP_HEADERS *transport = parseDatagram(packet_bytes, header.caplen);
-                printf("Transport layer: %d > %d (UDP) \n", transport->source_port, transport->dest_port);
-                }
-            else {
-                printf("Transport layer protocol unsupported \n");
-                continue;
-            }
-        }
-        }
-
-    }
         
+        if(!strcmp(currentflag, "raw")){
+            printf("Starting capture of raw bytes\n");
+            printflag();
+            
+            printf("\n\n");
+            read_raw_live(interface_name); // assumes normal ethernet
+            }
+        
+        if(!strcmp(currentflag, "complete")){
+            printf("Starting fully parsed scan\n");
+            printflag();
+            printf("\n");
+          
+            // find a way to handle keyboard interrupts here
+            while(1){
+                packet_bytes = pcap_next(interface, &header);
+
+
+                struct ethernet_header *frame = parseFrame(packet_bytes, header.caplen);
+                printminiflag();
+                printf("Frame %s > %s \nEthertype: %s\n", frame->sourceMac, frame->destinationMac, frame->ethertype);
+                
+                
+                char transportlayertype[50];
+                if(!strcmp(frame->ethertype,"Internet Protocol version 4 (IPv4)")){
+                    struct INET_V4_HEADERS *packet = parsePacket(packet_bytes, header.caplen);
+                    printf("Network layer: %s > %s\n", packet->s_addr, packet->d_addr);
+                    strncpy(transportlayertype, packet->protocol, 50);
+                    free_INET_V4_HEADERS(packet);
+                }
+                else if (!strcmp(frame->ethertype, "Internet Protocol Version 6 (IPv6)")){
+                    printf("Network layer: Internet Protocol version 6 (IPv6)\n");
+                    struct INET_V6_HEADERS *packet = parsev6Packet(packet_bytes, header.caplen);
+                    strncpy(transportlayertype, packet->next_header, 50);
+                    free_INET_V6_HEADERS(packet); // yes I know it's a magic number but to be frank I don't care.
+                }
+                else{
+                    printf("Network layer protocol unsupported");
+                    continue;
+                }
+
+                if(!strcmp(transportlayertype, "TCP")){
+                    struct TCP_HEADERS *transport = parseSegment(packet_bytes, header.caplen);
+                    printf("Transport layer: %d > %d\n Checksum: %02x", transport->source_port, transport->dest_port, transport->checksum);
+                    
+                }
+                else if (!strcmp(transportlayertype, "UDP")){
+                    struct UDP_HEADERS *transport = parseDatagram(packet_bytes, header.caplen);
+                    printf("Transport layer: %d > %d (UDP) \n", transport->source_port, transport->dest_port);
+                    }
+                else {
+                    printf("Transport layer protocol unsupported \n");
+                    continue;
+                }
+            }
+            }
+
+            }
+            break;
+        case DLT_LINUX_SLL:
+            // do linux cooked captures here
+            while(1){
+            packet_bytes = pcap_next(interface, &header);
+            printf("Linux cooked captures\n");
+    
+            struct linux_cooked_capture *linux_headers = parse_sll(packet_bytes, header.caplen);
+            printf("Address of the place where the address is stored %p\n", linux_headers->addr);
+            printf("Addr len %d\n", linux_headers->addr_len);
+            printf("Hw_type %d\n", linux_headers->hw_type);
+            printf("Protocol 0x%02x\n", linux_headers->protocol);
+
+            for(int i = 0; i < linux_headers->payload_size; i++){
+                if ( i % 8 == 0){
+                    printf("\n");
+                }
+                printf("%02x ", linux_headers->payload[i]);
+            }
+            free_lnx_ckd_cptr(linux_headers);
+            printf("\n");
+            }
+            break;
+        default:
+            printf("Something unsupported");
+    };
+
+
     }   
 
 

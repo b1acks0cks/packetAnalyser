@@ -44,10 +44,9 @@ linux_cooked_capture* parse_sll(const u_char *pkt, int size) {
 
 
 void test_linux_cooked_capture(){
-
    char errormessage[PCAP_ERRBUF_SIZE];
     pcap_t *interface = pcap_open_live("any", 65535, 1, 1000, errormessage);
-    if(interface == NULL)
+    if(!interface)
         printf("Could not open a interface: %s", errormessage);
     const u_char* packet;
     struct pcap_pkthdr header;
@@ -63,13 +62,10 @@ void test_linux_cooked_capture(){
     pcap_compile(interface, &fp, filter_exp, 0, net);
 
     pcap_setfilter(interface, &fp);
-
-
-     
     while(1) { 
         packet = pcap_next(interface, &header);
         linux_cooked_capture* goofy_header = parse_sll(packet, header.caplen);
-        printf("Addr: %d\n", goofy_header -> addr);
+        printf("Addr (first memory address): %p\n", goofy_header -> addr);
         printf("Addr length: %d\n", goofy_header ->addr_len);
         printf("Hw_types: %02x\n", goofy_header ->hw_type);
         printf("Protocol: %02x\n", goofy_header ->protocol);
