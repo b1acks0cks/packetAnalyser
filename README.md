@@ -335,21 +335,9 @@ sudo ./netdragon --list-interfaces
 - Be aware of legal and ethical implications
 - Consider encryption when storing captured data
 
-## Future Enhancements
-
-- [ ] IPv6 extension header support
-- [ ] Packet reassembly for fragments
-- [ ] Application layer protocol parsers (HTTP, DNS, etc.)
-- [ ] PCAP file reading/writing
-- [ ] Statistics and flow tracking
-- [ ] Colorized output
-- [ ] JSON/XML export formats
-- [ ] Windows support
-- [ ] Multi-threaded capture
-
 ## License
 
-This project appears to be open-source. Please check with the original author for specific licensing terms.
+Completely open-source. Use this how you want to!!!!!!
 
 ## Contributing
 
@@ -360,8 +348,7 @@ Contributions are welcome! Please ensure:
 - Documentation is updated
 
 ## Author
-
-Original packet analyzer implementation in pure C.
+Njabulo Mthombeni
 
 ## Acknowledgments
 
