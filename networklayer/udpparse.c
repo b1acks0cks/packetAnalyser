@@ -67,9 +67,12 @@ struct UDP_HEADERS *parseDatagram(const u_char* inputpacket, int size){
             currentposition += PORT_SIZE;
 
             result->payload = malloc(result->length);
-            for(int i = 0; i < result->length; i++){
-                *(result->payload + i) = *(network_packet->payload + i); // I used pointer arithmetic because I can
+            int iteration = 0;
+            for(; iteration < result->length; iteration++){
+                *(result->payload + iteration) = *(network_packet->payload + iteration); // I used pointer arithmetic because I can
             }
+
+            result->payload_length = (size_t)(iteration);
     }
     }
     else if ( !strcmp("Internet Protocol Version 6 (IPv6)", frame->ethertype)){
@@ -113,8 +116,12 @@ struct UDP_HEADERS *parseDatagram(const u_char* inputpacket, int size){
             currentposition += PORT_SIZE;
 
             result->payload = malloc(result->length);
-            for(int i = 0; i < result->length; i++)
-                *(result->payload + i) = *(network_packet->payload + i); // I used pointer arithmetic because I can
+
+            int iteration = 0;
+            for(; iteration < result->length; iteration++)
+                *(result->payload + iteration) = *(network_packet->payload + iteration); // I used pointer arithmetic because I can
+            
+            result->payload_length = iteration;
     }
     else {
         printf("Unsupported network layer protocol");

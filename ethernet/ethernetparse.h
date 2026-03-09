@@ -20,6 +20,7 @@ struct ethernet_header {
 
 //frees ethernet header that was intialised with heap memory exclusively
 void free_eth(struct ethernet_header *head);
+const char * get_ethertype(unsigned int ethertype);
 
 
 

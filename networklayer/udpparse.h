@@ -7,6 +7,7 @@ struct UDP_HEADERS {
     uint16_t dest_port;
     uint16_t length;
     uint16_t checksum;
+    size_t payload_length;
 
     unsigned char *payload;
 };

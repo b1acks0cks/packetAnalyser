@@ -17,6 +17,20 @@
 void printflag();
 void printminiflag();
 
+char* BytesToAscii(u_char* hex_in_bytes, size_t size){
+    char* ascii_result = malloc(size + 1);
+    if(!ascii_result){
+        printf("Heap allocation failed\n");
+        exit(1);
+    }
+    ascii_result[size] = '\0'; // for null termination
+
+    for(int position = 0; position < size; position++)
+        ascii_result[position] = (char)(hex_in_bytes[position]);
+
+    return ascii_result;
+}
+
 int main(int argc, char*argv[] ){
     int interface_name_size = 50;
     int user_specified_filter_size = 100;
@@ -97,7 +111,7 @@ int main(int argc, char*argv[] ){
         struct pcap_pkthdr header;
         case DLT_EN10MB:
             // do the normal stuff here
-        printf("Normal ethernet\n");
+        printf("Ethernet 2 \n");
         const u_char* packet_bytes;
    
         for(int i = 0; i < argc; i++){
@@ -145,19 +159,37 @@ int main(int argc, char*argv[] ){
                     continue;
                 }
 
+                const u_char* application_payload;
+                size_t payload_size;
                 if(!strcmp(transportlayertype, "TCP")){
                     struct TCP_HEADERS *transport = parseSegment(packet_bytes, header.caplen);
+                    application_payload = transport->payload;
+                    payload_size = transport->payload_length;
                     printf("Transport layer: %d > %d\n Checksum: %02x", transport->source_port, transport->dest_port, transport->checksum);
                     
                 }
                 else if (!strcmp(transportlayertype, "UDP")){
                     struct UDP_HEADERS *transport = parseDatagram(packet_bytes, header.caplen);
+                    application_payload = transport->payload;
+                    payload_size = transport->payload_length;
                     printf("Transport layer: %d > %d (UDP) \n", transport->source_port, transport->dest_port);
                     }
                 else {
                     printf("Transport layer protocol unsupported \n");
                     continue;
                 }
+
+           
+                if (application_payload != NULL){
+                printf("Payload: \n");
+                    for(int i = 0; i < payload_size; i++){
+                        if (i % 32 == 0){
+                            printf("\n");
+                        }
+                        printf("%c", application_payload[i]);
+                    }
+                printf("\n\n");
+                } 
             }
             }
 
@@ -165,28 +197,34 @@ int main(int argc, char*argv[] ){
             break;
         case DLT_LINUX_SLL:
             // do linux cooked captures here
+            printf("Parsing beyond the link-layer with linux cooked captures is currently unsupported\n");
             while(1){
             packet_bytes = pcap_next(interface, &header);
-            printf("Linux cooked captures\n");
-    
             struct linux_cooked_capture *linux_headers = parse_sll(packet_bytes, header.caplen);
             printf("Address of the place where the address is stored %p\n", linux_headers->addr);
             printf("Addr len %d\n", linux_headers->addr_len);
             printf("Hw_type %d\n", linux_headers->hw_type);
             printf("Protocol 0x%02x\n", linux_headers->protocol);
-
+            // linux cooked capture protocol codes are ALMOST the same as ethernet2 ethertype. In almost all network environments, they should match 1 to 1
+            const char* protocol =  get_ethertype(linux_headers->protocol);
+            printf("Netowrk layer protocol: %s\n", protocol);
+            
+            printf("Payload: \n");
             for(int i = 0; i < linux_headers->payload_size; i++){
                 if ( i % 8 == 0){
                     printf("\n");
                 }
+            
                 printf("%02x ", linux_headers->payload[i]);
             }
+            printf("\n\n");
+
             free_lnx_ckd_cptr(linux_headers);
             printf("\n");
             }
             break;
         default:
-            printf("Something unsupported");
+            printf("Unsupported link-layer protocol");
     };
 
 
